@@ -23,47 +23,35 @@ interface SidebarProps {
     onClose: () => void;
 }
 
-// 2. Our grouped navigation structure
+// 2. Our grouped navigation structure (Phase 1 Refined)
 const navGroups = [
     {
-        title: 'Overview',
+        title: 'Core',
         links: [
             { name: 'Dashboard', path: '/', icon: LayoutDashboard },
             { name: 'My Profile', path: '/profile', icon: UserCircle },
         ]
     },
     {
-        title: 'Academic Setup', // Primary for Registrar & Admin
+        title: 'Academic Control', // Merged Setup & Roster for a tighter flow
         links: [
-            { name: 'Academic Terms', path: '/terms', icon: CalendarDays }, // Manage Years/Quarters
-            { name: 'Subject Registry', path: '/subjects', icon: BookOpen }, // Weights live here
-            // { name: 'Class Sections', path: '/sections', icon: Table2 },
-        ]
-    },
-    {
-        title: 'User Management', // Primary for Registrar
-        links: [
+            { name: 'Academic Terms', path: '/terms', icon: CalendarDays },
+            { name: 'Subject Registry', path: '/subjects', icon: BookOpen },
             { name: 'Student Roster', path: '/students', icon: GraduationCap },
-            { name: 'Faculty List', path: '/teachers', icon: Users },
         ]
     },
     {
-        title: 'Grading Engine', // Primary for Teachers
+        title: 'Grading Engine', // The "Workhorse" of the app
         links: [
-            { name: 'Class Gradebook', path: '/gradebook', icon: Table2 }, // The main GRID
-            { name: 'Assessments', path: '/assessments', icon: ClipboardList }, // WW, PT, QA Management
+            { name: 'Class Gradebook', path: '/gradebook', icon: Table2 },
+            { name: 'Assessments', path: '/assessments', icon: ClipboardList },
         ]
     },
     {
-        title: 'Analytics & Reports', // For Admin, Parent, Student
+        title: 'Monitoring',
         links: [
             { name: 'Performance', path: '/performance', icon: BarChart3 },
-            { name: 'Audit Logs', path: '/audit', icon: ShieldCheck }, // For Admin
-        ]
-    },
-    {
-        title: 'System',
-        links: [
+            { name: 'Audit Logs', path: '/audit', icon: ShieldCheck },
             { name: 'Settings', path: '/settings', icon: Settings },
         ]
     }
