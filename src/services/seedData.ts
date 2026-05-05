@@ -4,8 +4,9 @@ export const seedDatabase = async () => {
     // 1. Check if we already have data to prevent duplicates
     const termCount = await db.terms.count();
     const subjectCount = await db.subjects.count();
+    const studentCount = await db.students.count();
 
-    if (termCount > 0 && subjectCount > 0) {
+    if (termCount > 0 && subjectCount > 0 && studentCount > 0) {
         console.log('Database already has data. Skipping seed.');
         return;
     }
@@ -103,6 +104,33 @@ export const seedDatabase = async () => {
             qaWeight: 0.2,
         },
     ]);
+
+    console.log(studentCount)
+    // 3. Seed Student Roster
+    if (studentCount === 0) {
+        const testStudents = [
+            { name: 'Juan Dela Cruz', section: 'Einstein', lrn: '102938475601' },
+            { name: 'Maria Clara Santos', section: 'Einstein', lrn: '102938475602' },
+            { name: 'Jose Rizalito', section: 'Einstein', lrn: '102938475603' },
+            { name: 'Andres Bonifacio Jr.', section: 'Newton', lrn: '202938475604' },
+            { name: 'Gabriela Silang-Reyes', section: 'Newton', lrn: '202938475605' },
+            { name: 'Melchora Aquino', section: 'Newton', lrn: '202938475606' },
+            { name: 'Emilio Aguinaldo V', section: 'Curie', lrn: '302938475607' },
+            { name: 'Leonor Rivera', section: 'Curie', lrn: '302938475608' },
+            { name: 'Apolinario Mabini', section: 'Curie', lrn: '302938475609' },
+            { name: 'Cory Aquino-Zuzuarregui', section: 'Einstein', lrn: '102938475610' },
+        ];
+
+        await db.students.bulkAdd(
+            testStudents.map((s) => ({
+                id: crypto.randomUUID(),
+                studentNumber: s.lrn,
+                name: s.name,
+                gradeLevel: s.section === 'Curie' ? 8 : 7, // Curie is Grade 8, others Grade 7
+                section: s.section,
+            }))
+        );
+    }
 
 
     console.log('Seed complete.');

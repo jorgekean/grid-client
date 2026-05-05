@@ -9,6 +9,8 @@ import { AcademicTerms } from './pages/academicterms'
 import { Subjects } from './pages/subjects/inidex'
 import { useEffect } from 'react'
 import { seedDatabase } from './services/seedData'
+import { NotFound } from './components/layout/NotFound'
+import { Students } from './pages/students'
 
 function App() {
   useEffect(() => {
@@ -28,12 +30,15 @@ function App() {
             <Route path="/" element={<AppLayout />}>
               <Route path="terms" element={<AcademicTerms />} />
               <Route path="subjects" element={<Subjects />} />
+              <Route path="students" element={<Students />} />
               {/* <Route index element={<Dashboard />} />
               <Route path="assets" element={<AssetRegistry />} />
               <Route path="/assets/:id" element={<AssetDetails />} />
               <Route path="departments" element={<Departments />} />
               <Route path="employees" element={<Employees />} />
               <Route path="assetcategories" element={<AssetCategories />} /> */}
+
+              <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
         </BrowserRouter>
