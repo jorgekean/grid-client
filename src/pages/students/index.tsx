@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Search, GraduationCap, Eye, UserCircle, School } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Search, GraduationCap, Eye, UserCircle, School, TrendingUp } from 'lucide-react';
 import type { ColumnDef, PaginationState } from '@tanstack/react-table';
 
 import { useStudents } from '../../hooks/useStudents';
@@ -11,6 +11,7 @@ import type { Student } from '../../services/db';
 export function Students() {
     const { students, isLoading, getById } = useStudents();
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
 
     // UI State
     const action = searchParams.get('action');
@@ -85,17 +86,19 @@ export function Students() {
             header: () => <div className="text-right">Actions</div>,
             cell: ({ row }) => (
                 <div className="text-right">
+                    {/* INSTEAD OF SETTING SEARCH PARAMS FOR A DRAWER, 
+              WE NOW NAVIGATE TO THE FULL PROFILE PAGE
+          */}
                     <button
-                        onClick={() => setSearchParams({ action: 'view', id: row.original.id })}
-                        className="p-2 text-slate-400 hover:text-primary-600 transition-colors"
-                        title="View Details"
+                        onClick={() => navigate(`/students/${row.original.id}`)}
+                        className="p-2 text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                     >
-                        <Eye className="w-4 h-4" />
+                        <TrendingUp className="w-4 h-4" /> {/* Or stay with Eye icon */}
                     </button>
                 </div>
             )
         }
-    ], [setSearchParams]);
+    ], [setSearchParams, navigate]);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
