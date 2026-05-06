@@ -24,8 +24,8 @@ export function ReportCard({ student, onClose }: { student: any, onClose: () => 
     const borderClass = printConfig.layout ? 'border-slate-900 print:border-black' : 'border-slate-300 print:border-transparent';
 
     return (
-        <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex justify-center overflow-y-auto py-10 print:py-0 print:block print:bg-transparent print:backdrop-blur-none">
-
+        // <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex justify-center overflow-y-auto py-10 print:py-0 print:block print:bg-transparent print:backdrop-blur-none">
+        <div className="fixed inset-0 z-[100] bg-slate-900/80 flex justify-center items-start overflow-y-auto py-10 print:static print:bg-transparent print:p-0 print:m-0">
             {/* --- FLOATING CONTROL PANEL (Hidden on Print) --- */}
             <div className="fixed top-6 left-6 z-50 bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 w-72 print:hidden animate-in slide-in-from-left-8">
                 <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
@@ -73,8 +73,8 @@ export function ReportCard({ student, onClose }: { student: any, onClose: () => 
             </div>
 
             {/* --- THE A4 PAPER --- */}
-            <div className="a4-print-container bg-white w-[210mm] min-h-[297mm] mx-auto shadow-[0_0_40px_rgba(0,0,0,0.5)] p-[0.5in] text-black font-serif relative print:shadow-none print:w-full">
-
+            {/* <div className="a4-print-container bg-white w-[210mm] min-h-[297mm] mx-auto shadow-[0_0_40px_rgba(0,0,0,0.5)] p-[0.5in] text-black font-serif relative print:shadow-none print:w-full"> */}
+            <div className="a4-print-container bg-white w-[210mm] h-[295mm] mx-auto shadow-2xl p-[0.5in] text-black font-serif print:shadow-none print:w-full print:min-h-0 print:h-max">
                 {/* DepEd Header (Fades out on screen, 0% ink on printer) */}
                 <div className={`text-center space-y-1 mb-8 ${printConfig.layout ? '' : 'opacity-30 print:opacity-0'}`}>
                     <p className="text-xs uppercase tracking-widest">Republic of the Philippines</p>

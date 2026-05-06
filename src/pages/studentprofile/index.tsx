@@ -61,6 +61,7 @@ export function StudentProfile() {
 
                 <button
                     onClick={() => setShowPrintPreview(true)}
+                    // onClick={() => window.open(`/print/sf9/${student.id}`, '_blank')}
                     className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
                 >
                     <Printer className="w-4 h-4" />

@@ -14,6 +14,7 @@ import { Students } from './pages/students'
 import { Assessments } from './pages/assessments'
 import { Gradebook } from './pages/gradebook'
 import { StudentProfile } from './pages/studentprofile'
+import { PrintSF9 } from './pages/grading/PrintSF9'
 
 function App() {
 
@@ -26,6 +27,7 @@ function App() {
 
           <Routes>
             {/* <Route path="/login" element={<Login />} /> */}
+            <Route path="/print/sf9/:studentId" element={<PrintSF9 />} />
             <Route path="/" element={<AppLayout />}>
               <Route path="terms" element={<AcademicTerms />} />
               <Route path="subjects" element={<Subjects />} />
@@ -33,6 +35,7 @@ function App() {
               <Route path="students/:studentId" element={<StudentProfile />} />
               <Route path="assessments" element={<Assessments />} />
               <Route path="gradebook" element={<Gradebook />} />
+
               {/* <Route index element={<Dashboard />} />
               <Route path="assets" element={<AssetRegistry />} />
               <Route path="/assets/:id" element={<AssetDetails />} />

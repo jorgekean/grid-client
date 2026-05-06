@@ -73,6 +73,13 @@ body {
 
 @media print {
 
+  /* Prevent the body from creating extra height */
+  html,
+  body {
+    height: auto !important;
+    overflow: hidden !important;
+  }
+
   /* 1. FORCE VECTOR TEXT (Anti-Blur) */
   * {
     filter: none !important;
