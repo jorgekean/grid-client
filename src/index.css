@@ -68,3 +68,58 @@ body {
     @apply md:opacity-0 md:group-hover:opacity-100;
   }
 }
+
+
+
+@media print {
+
+  /* 1. FORCE VECTOR TEXT (Anti-Blur) */
+  * {
+    filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    transform: none !important;
+    /* Transforms also trigger rasterization */
+  }
+
+  /* 2. Define Standard A4 Paper Size */
+  @page {
+    size: A4 portrait;
+    margin: 0.5in;
+    /* Standard DepEd margin */
+  }
+
+  /* 3. Hide ALL app UI */
+  body * {
+    visibility: hidden;
+  }
+
+  /* 4. Show ONLY the report card */
+  .a4-print-container,
+  .a4-print-container * {
+    visibility: visible;
+  }
+
+  /* 5. Reset position for the printer */
+  .a4-print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+
+    /* CRITICAL: Forces the printer to print the gray table headers */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent awkward page breaks in the middle of tables */
+  table,
+  .signature-block {
+    page-break-inside: avoid;
+  }
+}

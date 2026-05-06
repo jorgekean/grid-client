@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Award, BookOpen, TrendingUp, Target } from 'lucide-react';
+import { ArrowLeft, Award, BookOpen, TrendingUp, Target, Printer } from 'lucide-react';
 import { useStudentPerformance } from '../../hooks/useStudentPerformance';
 import { useTerms } from '../../hooks/useTerms';
+import { ReportCard } from '../grading/ReportCard';
+import { db, type Student } from '../../services/db';
 
 export function StudentProfile() {
     const { studentId } = useParams();
@@ -11,11 +13,26 @@ export function StudentProfile() {
     const [selectedTerm, setSelectedTerm] = useState('t-q1'); // Default to Q1 seed ID
 
     const { performances, isLoading } = useStudentPerformance(studentId!, selectedTerm);
+    const [student, setStudent] = useState<Student | null>(null);
+    const [showPrintPreview, setShowPrintPreview] = useState(false);
+
+
+    useEffect(() => {
+        if (studentId) {
+            db.students.get(studentId).then(data => {
+                if (data) setStudent(data);
+            });
+        }
+    }, [studentId]);
 
     // Calculate General Average
     const generalAverage = performances.length > 0
         ? performances.reduce((sum, p) => sum + p.finalGrade, 0) / performances.length
         : 0;
+
+    // Handle Loading state
+    if (!student && isLoading) return <div className="p-10 text-center">Loading Student...</div>;
+    if (!student) return <div className="p-10 text-center text-red-500">Student not found.</div>;
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -41,6 +58,14 @@ export function StudentProfile() {
                 >
                     {terms.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
+
+                <button
+                    onClick={() => setShowPrintPreview(true)}
+                    className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                >
+                    <Printer className="w-4 h-4" />
+                    Generate SF9
+                </button>
             </header>
 
             {/* 1. Summary Cards */}
@@ -125,6 +150,14 @@ export function StudentProfile() {
                     </div>
                 ))}
             </div>
+
+            {/* MODAL OVERLAY */}
+            {showPrintPreview && (
+                <ReportCard
+                    student={student!}
+                    onClose={() => setShowPrintPreview(false)}
+                />
+            )}
         </div>
     );
 }
