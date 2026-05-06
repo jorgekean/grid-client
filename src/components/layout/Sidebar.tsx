@@ -43,8 +43,8 @@ const navGroups = [
     {
         title: 'Grading Engine', // The "Workhorse" of the app
         links: [
-            { name: 'Class Gradebook', path: '/gradebook', icon: Table2 },
             { name: 'Assessments', path: '/assessments', icon: ClipboardList },
+            { name: 'Class Gradebook', path: '/gradebook', icon: Table2 },
         ]
     },
     {

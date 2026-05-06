@@ -12,6 +12,7 @@ import { seedDatabase } from './services/seedData'
 import { NotFound } from './components/layout/NotFound'
 import { Students } from './pages/students'
 import { Assessments } from './pages/assessments'
+import { Gradebook } from './pages/gradebook'
 
 function App() {
 
@@ -29,6 +30,7 @@ function App() {
               <Route path="subjects" element={<Subjects />} />
               <Route path="students" element={<Students />} />
               <Route path="assessments" element={<Assessments />} />
+              <Route path="gradebook" element={<Gradebook />} />
               {/* <Route index element={<Dashboard />} />
               <Route path="assets" element={<AssetRegistry />} />
               <Route path="/assets/:id" element={<AssetDetails />} />

@@ -30,6 +30,12 @@ export interface Student {
     section: string;
 }
 
+export interface Section {
+    id: string;         // GUID (e.g., "sec-einstein")
+    name: string;       // The display name (e.g., "Einstein")
+    gradeLevel: number; // The level (e.g., 7)
+}
+
 export type AssessmentCategory = 'WW' | 'PT' | 'QA';
 
 export interface Assessment {
@@ -68,21 +74,23 @@ export class GradingDatabase extends Dexie {
     assessments!: Table<Assessment>;
     grades!: Table<Grade>;
     summaries!: Table<TermSummary>;
+    sections!: Table<Section>;
 
     constructor() {
         super('GradingSystemDB');
 
         // Schema versioning
-        this.version(2).stores({
+        this.version(4).stores({
             terms: 'id, year, isLocked',
             subjects: 'id, code, gradeLevel',
-            students: 'id, studentNumber, [gradeLevel+section]',
+            students: 'id, studentNumber, section, [gradeLevel+section]',
             // Assessments are often queried by subject/term
             assessments: 'id, subjectId, termId, category, [subjectId+termId], [subjectId+termId+category]',
             // Grades are queried heavily by student/assessment combo
             grades: 'id, studentId, assessmentId, [studentId+assessmentId]',
             // Summaries used for reporting
-            summaries: 'id, studentId, termId, [studentId+termId], subjectId'
+            summaries: 'id, studentId, termId, [studentId+termId], subjectId',
+            sections: 'id, name, gradeLevel',
         });
 
         this.on('populate', (transaction) => {
@@ -105,12 +113,12 @@ export class GradingDatabase extends Dexie {
                 { id: 's-tle7', code: 'TLE-7', title: 'Technology & Livelihood Education', gradeLevel: 7, wwWeight: 0.2, ptWeight: 0.6, qaWeight: 0.2 },
             ]);
 
-            // // 3. Sections
-            // transaction.table('sections').bulkAdd([
-            //     { id: 'sec-einstein', name: 'Einstein', gradeLevel: 7 },
-            //     { id: 'sec-newton', name: 'Newton', gradeLevel: 7 },
-            //     { id: 'sec-curie', name: 'Curie', gradeLevel: 8 },
-            // ]);
+            // 3. Sections
+            transaction.table('sections').bulkAdd([
+                { id: 'sec-einstein', name: 'Einstein', gradeLevel: 7 },
+                { id: 'sec-newton', name: 'Newton', gradeLevel: 7 },
+                { id: 'sec-curie', name: 'Curie', gradeLevel: 8 },
+            ]);
 
             // 4. Students
             const testStudents = [
@@ -133,6 +141,28 @@ export class GradingDatabase extends Dexie {
                     name: s.name,
                     gradeLevel: s.section === 'Curie' ? 8 : 7,
                     section: s.section,
+                }))
+            );
+
+            // assessments
+            const sampleAssessments = [
+                { termId: 't-q1', subjectId: 's-math7', title: 'Quiz #1', category: 'WW', maxScore: 20, date: new Date('2025-08-15') },
+                { termId: 't-q1', subjectId: 's-math7', title: 'Unit Test 1', category: 'PT', maxScore: 100, date: new Date('2025-09-10') },
+                { termId: 't-q1', subjectId: 's-math7', title: 'Quarterly Exam', category: 'QA', maxScore: 100, date: new Date('2025-10-10') },
+                { termId: 't-q1', subjectId: 's-eng7', title: 'Essay #1', category: 'WW', maxScore: 25, date: new Date('2025-08-20') },
+                { termId: 't-q1', subjectId: 's-eng7', title: 'Book Report', category: 'PT', maxScore: 100, date: new Date('2025-09-15') },
+                { termId: 't-q1', subjectId: 's-eng7', title: 'Quarterly Exam', category: 'QA', maxScore: 100, date: new Date('2025-10-12') },
+            ];
+
+            transaction.table('assessments').bulkAdd(
+                sampleAssessments.map((a) => ({
+                    id: `assess-${crypto.randomUUID()}`,
+                    termId: a.termId,
+                    subjectId: a.subjectId,
+                    title: a.title,
+                    category: a.category,
+                    maxScore: a.maxScore,
+                    date: a.date,
                 }))
             );
         });
