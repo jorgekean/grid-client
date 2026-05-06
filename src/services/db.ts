@@ -80,7 +80,7 @@ export class GradingDatabase extends Dexie {
         super('GradingSystemDB');
 
         // Schema versioning
-        this.version(4).stores({
+        this.version(7).stores({
             terms: 'id, year, isLocked',
             subjects: 'id, code, gradeLevel',
             students: 'id, studentNumber, section, [gradeLevel+section]',
@@ -105,13 +105,14 @@ export class GradingDatabase extends Dexie {
             ]);
 
             // 2. Subjects
-            transaction.table('subjects').bulkAdd([
+            const subjectData = [
                 { id: 's-math7', code: 'MATH-7', title: 'General Mathematics', gradeLevel: 7, wwWeight: 0.3, ptWeight: 0.5, qaWeight: 0.2 },
                 { id: 's-sci7', code: 'SCI-7', title: 'Integrated Science', gradeLevel: 7, wwWeight: 0.3, ptWeight: 0.5, qaWeight: 0.2 },
                 { id: 's-eng7', code: 'ENG-7', title: 'English & Literature', gradeLevel: 7, wwWeight: 0.3, ptWeight: 0.5, qaWeight: 0.2 },
                 { id: 's-mapeh7', code: 'MAPEH-7', title: 'Music, Arts, PE & Health', gradeLevel: 7, wwWeight: 0.2, ptWeight: 0.6, qaWeight: 0.2 },
                 { id: 's-tle7', code: 'TLE-7', title: 'Technology & Livelihood Education', gradeLevel: 7, wwWeight: 0.2, ptWeight: 0.6, qaWeight: 0.2 },
-            ]);
+            ];
+            transaction.table('subjects').bulkAdd(subjectData);
 
             // 3. Sections
             transaction.table('sections').bulkAdd([
@@ -120,51 +121,60 @@ export class GradingDatabase extends Dexie {
                 { id: 'sec-curie', name: 'Curie', gradeLevel: 8 },
             ]);
 
-            // 4. Students
-            const testStudents = [
-                { name: 'Juan Dela Cruz', section: 'Einstein', lrn: '102938475601' },
-                { name: 'Maria Clara Santos', section: 'Einstein', lrn: '102938475602' },
-                { name: 'Jose Rizalito', section: 'Einstein', lrn: '102938475603' },
-                { name: 'Andres Bonifacio Jr.', section: 'Newton', lrn: '202938475604' },
-                { name: 'Gabriela Silang-Reyes', section: 'Newton', lrn: '202938475605' },
-                { name: 'Melchora Aquino', section: 'Newton', lrn: '202938475606' },
-                { name: 'Emilio Aguinaldo V', section: 'Curie', lrn: '302938475607' },
-                { name: 'Leonor Rivera', section: 'Curie', lrn: '302938475608' },
-                { name: 'Apolinario Mabini', section: 'Curie', lrn: '302938475609' },
-                { name: 'Cory Aquino-Zuzuarregui', section: 'Einstein', lrn: '102938475610' },
-            ];
+            // 4. Students (Full Roster)
+            const juanId = 'stu-102938475601';
+            const joseId = 'stu-102938475603';
+            const emilioId = 'stu-302938475607';
 
-            transaction.table('students').bulkAdd(
-                testStudents.map((s) => ({
-                    id: `stu-${s.lrn}`, // Use LRN for stable ID
-                    studentNumber: s.lrn,
-                    name: s.name,
-                    gradeLevel: s.section === 'Curie' ? 8 : 7,
-                    section: s.section,
-                }))
-            );
+            transaction.table('students').bulkAdd([
+                { id: juanId, studentNumber: '102938475601', name: 'Juan Dela Cruz', gradeLevel: 7, section: 'Einstein' },
+                { id: 'stu-102938475602', studentNumber: '102938475602', name: 'Maria Clara Santos', gradeLevel: 7, section: 'Einstein' },
+                { id: joseId, studentNumber: '102938475603', name: 'Jose Rizalito', gradeLevel: 7, section: 'Einstein' },
+                { id: 'stu-202938475604', studentNumber: '202938475604', name: 'Andres Bonifacio Jr.', gradeLevel: 7, section: 'Newton' },
+                { id: 'stu-202938475605', studentNumber: '202938475605', name: 'Gabriela Silang-Reyes', gradeLevel: 7, section: 'Newton' },
+                { id: emilioId, studentNumber: '302938475607', name: 'Emilio Aguinaldo V', gradeLevel: 8, section: 'Curie' },
+                { id: 'stu-102938475610', studentNumber: '102938475610', name: 'Cory Aquino-Zuzuarregui', gradeLevel: 7, section: 'Einstein' },
+            ]);
 
-            // assessments
-            const sampleAssessments = [
-                { termId: 't-q1', subjectId: 's-math7', title: 'Quiz #1', category: 'WW', maxScore: 20, date: new Date('2025-08-15') },
-                { termId: 't-q1', subjectId: 's-math7', title: 'Unit Test 1', category: 'PT', maxScore: 100, date: new Date('2025-09-10') },
-                { termId: 't-q1', subjectId: 's-math7', title: 'Quarterly Exam', category: 'QA', maxScore: 100, date: new Date('2025-10-10') },
-                { termId: 't-q1', subjectId: 's-eng7', title: 'Essay #1', category: 'WW', maxScore: 25, date: new Date('2025-08-20') },
-                { termId: 't-q1', subjectId: 's-eng7', title: 'Book Report', category: 'PT', maxScore: 100, date: new Date('2025-09-15') },
-                { termId: 't-q1', subjectId: 's-eng7', title: 'Quarterly Exam', category: 'QA', maxScore: 100, date: new Date('2025-10-12') },
-            ];
+            // 5. THE DATA ENGINE: Assessments & Grades for Juan
+            const assessments: Assessment[] = [];
+            const grades: Grade[] = [];
 
-            transaction.table('assessments').bulkAdd(
-                sampleAssessments.map((a) => ({
-                    id: `assess-${crypto.randomUUID()}`,
-                    termId: a.termId,
-                    subjectId: a.subjectId,
-                    title: a.title,
-                    category: a.category,
-                    maxScore: a.maxScore,
-                    date: a.date,
-                }))
-            );
+            subjectData.forEach(sub => {
+                // Create one of each category for every subject for Q1
+                const categories: AssessmentCategory[] = ['WW', 'PT', 'QA'];
+
+                categories.forEach(cat => {
+                    const assessId = `seed-${sub.code}-${cat}`;
+                    const max = cat === 'WW' ? 20 : 100;
+
+                    assessments.push({
+                        id: assessId,
+                        termId: 't-q1',
+                        subjectId: sub.id,
+                        title: cat === 'WW' ? 'Unit Quiz' : cat === 'PT' ? 'Major Project' : 'Quarterly Exam',
+                        category: cat,
+                        maxScore: max,
+                        date: new Date('2025-09-15')
+                    });
+
+                    // --- JUAN: High Performer ---
+                    grades.push({ id: `g-juan-${assessId}`, studentId: juanId, assessmentId: assessId, score: cat === 'WW' ? 19 : 95 });
+
+                    // --- JOSE: Fails Math, Passes others ---
+                    let joseScore = cat === 'WW' ? 15 : 85; // Passing default
+                    if (sub.code === 'MATH-7') joseScore = cat === 'WW' ? 8 : 50; // Failing Math (approx 45%)
+                    grades.push({ id: `g-jose-${assessId}`, studentId: joseId, assessmentId: assessId, score: joseScore });
+
+                    // --- EMILIO: Fails all except English ---
+                    let emilioScore = cat === 'WW' ? 6 : 45; // Failing default
+                    if (sub.code === 'ENG-7') emilioScore = cat === 'WW' ? 18 : 90; // Passing English
+                    grades.push({ id: `g-emilio-${assessId}`, studentId: emilioId, assessmentId: assessId, score: emilioScore });
+                });
+            });
+
+            transaction.table('assessments').bulkAdd(assessments);
+            transaction.table('grades').bulkAdd(grades);
         });
     }
 }
