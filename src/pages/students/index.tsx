@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, GraduationCap, Eye, UserCircle, School, TrendingUp } from 'lucide-react';
+import { Search, GraduationCap, Eye, UserCircle, School, TrendingUp, Printer } from 'lucide-react';
 import type { ColumnDef, PaginationState } from '@tanstack/react-table';
 
 import { useStudents } from '../../hooks/useStudents';
 import { Drawer } from '../../components/ui/Drawer';
 import { DataTable } from '../../components/ui/DataTable';
 import type { Student } from '../../services/db';
+import { ReportCard } from '../grading/ReportCard';
 
 export function Students() {
     const { students, isLoading, getById } = useStudents();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
+
+    const [activePrintStudent, setActivePrintStudent] = useState<any | null>(null);
 
     // UI State
     const action = searchParams.get('action');
@@ -83,17 +86,26 @@ export function Students() {
         },
         {
             id: 'actions',
-            header: () => <div className="text-right">Actions</div>,
+            header: () => <div className="text-right px-4">Actions</div>,
             cell: ({ row }) => (
-                <div className="text-right">
-                    {/* INSTEAD OF SETTING SEARCH PARAMS FOR A DRAWER, 
-              WE NOW NAVIGATE TO THE FULL PROFILE PAGE
-          */}
+                <div className="flex items-center justify-end gap-2 px-2">
+                    {/* PERFORMANCE/PROFILE BUTTON */}
                     <button
                         onClick={() => navigate(`/students/${row.original.id}`)}
-                        className="p-2 text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                        className="p-2.5 text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-xl transition-all active:scale-95"
+                        title="View Performance"
                     >
-                        <TrendingUp className="w-4 h-4" /> {/* Or stay with Eye icon */}
+                        <TrendingUp className="w-4 h-4" />
+                    </button>
+
+                    {/* PRINT SF9 BUTTON */}
+                    <button
+                        onClick={() => setActivePrintStudent(row.original)}
+                        className="flex items-center gap-2 py-2 px-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-primary-600 hover:text-white transition-all active:scale-95 shadow-sm border border-transparent hover:border-primary-500"
+                        title="Print SF9 Report Card"
+                    >
+                        <Printer className="w-4 h-4" />
+                        <span className="text-xs font-bold tracking-tight">SF9</span>
                     </button>
                 </div>
             )
@@ -179,6 +191,13 @@ export function Students() {
                     </div>
                 )}
             </Drawer>
+
+            {activePrintStudent && (
+                <ReportCard
+                    student={activePrintStudent}
+                    onClose={() => setActivePrintStudent(null)}
+                />
+            )}
         </div>
     );
 }
