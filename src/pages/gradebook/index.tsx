@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { LayoutGrid, Info, CheckCircle2, Calculator, ArrowRight } from 'lucide-react';
+import { LayoutGrid, Info, CheckCircle2, Calculator, ArrowRight, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useSubjects } from '../../hooks/useSubjects';
 import { useTerms } from '../../hooks/useTerms';
 import { useSections } from '../../hooks/useSections';
 import { useGradebook } from '../../hooks/useGradebook';
+import { useProductTour } from '../../hooks/useProductTour';
 import type { Assessment, Student, Grade, Subject } from '../../services/db';
 import { calculateStudentGrade } from '../../utils/gradeEngine';
 
@@ -70,6 +71,11 @@ export function Gradebook() {
     const [selectedSection, setSelectedSection] = useState('');
     const [selectedTerm, setSelectedTerm] = useState('');
 
+    // 🎯 PRODUCT TOUR - Using the reusable hook
+    const { startTour, TourComponent } = useProductTour('gradebook', () => {
+        toast.success('🎉 Tour completed! You\'re ready to start grading!');
+    });
+
     // Find the full subject object to get weights
     const selectedSubjectData = useMemo(() =>
         subjects.find(s => s.id === selectedSubject),
@@ -86,37 +92,56 @@ export function Gradebook() {
 
             {/* 1. Filter Bar */}
             <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 shrink-0">
-                <div>
+                <div data-tour="page-title">
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <LayoutGrid className="w-6 h-6 text-primary-600" /> Gradebook Grid
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">Real-time weighted K-12 grading.</p>
                 </div>
 
-                <div className="flex flex-wrap gap-2 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <select
-                        value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)}
-                        className="bg-slate-50 dark:bg-slate-950 border-none rounded-xl text-xs font-bold p-2.5 outline-none focus:ring-2 focus:ring-primary-500/20 dark:text-slate-200"
-                    >
-                        <option value="">Select Subject...</option>
-                        {subjects.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
-                    </select>
+                <div className="flex gap-2 items-center">
+                    <div className="flex flex-wrap gap-2 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <select
+                            data-tour="subject-selector"
+                            value={selectedSubject}
+                            onChange={(e) => setSelectedSubject(e.target.value)}
+                            className="bg-slate-50 dark:bg-slate-950 border-none rounded-xl text-xs font-bold p-2.5 outline-none focus:ring-2 focus:ring-primary-500/20 dark:text-slate-200"
+                        >
+                            <option value="">Select Subject...</option>
+                            {subjects.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
+                        </select>
 
-                    <select
-                        value={selectedSection} onChange={(e) => setSelectedSection(e.target.value)}
-                        className="bg-slate-50 dark:bg-slate-950 border-none rounded-xl text-xs font-bold p-2.5 outline-none focus:ring-2 focus:ring-primary-500/20 dark:text-slate-200"
-                    >
-                        <option value="">Select Section...</option>
-                        {sections.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-                    </select>
+                        <select
+                            data-tour="section-selector"
+                            value={selectedSection}
+                            onChange={(e) => setSelectedSection(e.target.value)}
+                            className="bg-slate-50 dark:bg-slate-950 border-none rounded-xl text-xs font-bold p-2.5 outline-none focus:ring-2 focus:ring-primary-500/20 dark:text-slate-200"
+                        >
+                            <option value="">Select Section...</option>
+                            {sections.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                        </select>
 
-                    <select
-                        value={selectedTerm} onChange={(e) => setSelectedTerm(e.target.value)}
-                        className="bg-slate-50 dark:bg-slate-950 border-none rounded-xl text-xs font-bold p-2.5 outline-none focus:ring-2 focus:ring-primary-500/20 dark:text-slate-200"
+                        <select
+                            data-tour="term-selector"
+                            value={selectedTerm}
+                            onChange={(e) => setSelectedTerm(e.target.value)}
+                            className="bg-slate-50 dark:bg-slate-950 border-none rounded-xl text-xs font-bold p-2.5 outline-none focus:ring-2 focus:ring-primary-500/20 dark:text-slate-200"
+                        >
+                            <option value="">Select Quarter...</option>
+                            {terms.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                        </select>
+                    </div>
+
+                    {/* 🎯 HELP BUTTON - Starts Interactive Guide */}
+                    <button
+                        data-tour="help-button"
+                        onClick={startTour}
+                        className="px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-bold text-xs flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95"
+                        title="Get step-by-step help using the gradebook"
                     >
-                        <option value="">Select Quarter...</option>
-                        {terms.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                    </select>
+                        <HelpCircle className="w-4 h-4" />
+                        Need Help?
+                    </button>
                 </div>
             </header>
 
@@ -204,6 +229,9 @@ export function Gradebook() {
                     </table>
                 </div>
             )}
+
+            {/* 🎯 PRODUCT TOUR OVERLAY - Managed by hook */}
+            {TourComponent}
         </div>
     );
 }
