@@ -1,25 +1,117 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Printer, Settings2 } from 'lucide-react';
-import { db, type Student } from '../../services/db';
-import { useStudentPerformance } from '../../hooks/useStudentPerformance';
+import { db, type Student, type Subject } from '../../services/db';
+import { calculateStudentGrade } from '../../utils/gradeEngine';
+
+interface QuarterGrades {
+    [subjectId: string]: {
+        q1?: number;
+        q2?: number;
+        q3?: number;
+        q4?: number;
+        final?: number;
+    };
+}
 
 export function PrintSF9() {
     const { studentId } = useParams();
     const [student, setStudent] = useState<Student | null>(null);
+    const [subjects, setSubjects] = useState<Subject[]>([]);
+    const [quarterGrades, setQuarterGrades] = useState<QuarterGrades>({});
+    const [isLoading, setIsLoading] = useState(true);
 
     // Masking State
     const [printConfig, setPrintConfig] = useState({
         layout: true, q1: true, q2: false, q3: false, q4: false, final: false,
     });
 
+    // Fetch student data and calculate all quarter grades
     useEffect(() => {
-        if (studentId) {
-            db.students.get(studentId).then(data => { if (data) setStudent(data); });
-        }
-    }, [studentId]);
+        const loadData = async () => {
+            if (!studentId) return;
 
-    const { performances, isLoading } = useStudentPerformance(studentId || '', 't-q1');
+            setIsLoading(true);
+            try {
+                // 1. Get student
+                const studentData = await db.students.get(studentId);
+                if (!studentData) {
+                    setIsLoading(false);
+                    return;
+                }
+                setStudent(studentData);
+
+                // 2. Get all subjects for student's grade level
+                const subjectsData = await db.subjects
+                    .where({ gradeLevel: studentData.gradeLevel })
+                    .toArray();
+                setSubjects(subjectsData);
+
+                // 3. Get all terms
+                const terms = await db.terms.toArray();
+
+                // 4. Calculate grades for each subject across all quarters
+                const gradesMap: QuarterGrades = {};
+
+                for (const subject of subjectsData) {
+                    gradesMap[subject.id] = {};
+
+                    // For each quarter (Q1-Q4)
+                    for (const term of terms) {
+                        const quarterKey = term.name.includes('1st') ? 'q1' :
+                            term.name.includes('2nd') ? 'q2' :
+                                term.name.includes('3rd') ? 'q3' :
+                                    term.name.includes('4th') ? 'q4' : null;
+
+                        if (!quarterKey) continue;
+
+                        // Get assessments for this subject and term
+                        const assessments = await db.assessments
+                            .where({ subjectId: subject.id, termId: term.id })
+                            .toArray();
+
+                        if (assessments.length === 0) {
+                            gradesMap[subject.id][quarterKey] = undefined;
+                            continue;
+                        }
+
+                        // Get grades for this student and these assessments
+                        const assessmentIds = assessments.map(a => a.id);
+                        const grades = await db.grades
+                            .where('assessmentId')
+                            .anyOf(assessmentIds)
+                            .and(g => g.studentId === studentId)
+                            .toArray();
+
+                        // Calculate final grade using grade engine
+                        const result = calculateStudentGrade(studentId, assessments, grades, subject);
+                        gradesMap[subject.id][quarterKey] = result.finalGrade;
+                    }
+
+                    // Calculate final grade (average of all quarters with data)
+                    const quarterValues = [
+                        gradesMap[subject.id].q1,
+                        gradesMap[subject.id].q2,
+                        gradesMap[subject.id].q3,
+                        gradesMap[subject.id].q4
+                    ].filter(v => v !== undefined && v > 0) as number[];
+
+                    if (quarterValues.length > 0) {
+                        gradesMap[subject.id].final =
+                            quarterValues.reduce((sum, v) => sum + v, 0) / quarterValues.length;
+                    }
+                }
+
+                setQuarterGrades(gradesMap);
+            } catch (error) {
+                console.error('Error loading SF9 data:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadData();
+    }, [studentId]);
 
     if (isLoading || !student) return <div className="p-10 text-center">Loading Report Card...</div>;
 
@@ -86,16 +178,32 @@ export function PrintSF9() {
                         </tr>
                     </thead>
                     <tbody>
-                        {performances.map(({ subject, finalGrade }) => (
-                            <tr key={subject.id}>
-                                <td className={`border p-2 text-left font-bold uppercase ${borderClass} ${printConfig.layout ? '' : 'print:invisible'}`}>{subject.title}</td>
-                                <td className={`border p-2 font-mono ${borderClass} ${printConfig.q1 ? 'text-black' : 'text-slate-300 print:invisible'}`}>{finalGrade.toFixed(0)}</td>
-                                <td className={`border p-2 font-mono ${borderClass} ${printConfig.q2 ? 'text-black' : 'text-slate-300 print:invisible'}`}>--</td>
-                                <td className={`border p-2 font-mono ${borderClass} ${printConfig.q3 ? 'text-black' : 'text-slate-300 print:invisible'}`}>--</td>
-                                <td className={`border p-2 font-mono ${borderClass} ${printConfig.q4 ? 'text-black' : 'text-slate-300 print:invisible'}`}>--</td>
-                                <td className={`border p-2 font-bold ${borderClass} ${printConfig.final ? 'text-black' : 'text-slate-300 print:invisible'}`}>--</td>
-                            </tr>
-                        ))}
+                        {subjects.map((subject) => {
+                            const subjectGrades = quarterGrades[subject.id] || {};
+
+                            return (
+                                <tr key={subject.id}>
+                                    <td className={`border p-2 text-left font-bold uppercase ${borderClass} ${printConfig.layout ? '' : 'print:invisible'}`}>
+                                        {subject.title}
+                                    </td>
+                                    <td className={`border p-2 font-mono ${borderClass} ${printConfig.q1 ? 'text-black' : 'text-slate-300 print:invisible'}`}>
+                                        {subjectGrades.q1 !== undefined ? subjectGrades.q1.toFixed(0) : '--'}
+                                    </td>
+                                    <td className={`border p-2 font-mono ${borderClass} ${printConfig.q2 ? 'text-black' : 'text-slate-300 print:invisible'}`}>
+                                        {subjectGrades.q2 !== undefined ? subjectGrades.q2.toFixed(0) : '--'}
+                                    </td>
+                                    <td className={`border p-2 font-mono ${borderClass} ${printConfig.q3 ? 'text-black' : 'text-slate-300 print:invisible'}`}>
+                                        {subjectGrades.q3 !== undefined ? subjectGrades.q3.toFixed(0) : '--'}
+                                    </td>
+                                    <td className={`border p-2 font-mono ${borderClass} ${printConfig.q4 ? 'text-black' : 'text-slate-300 print:invisible'}`}>
+                                        {subjectGrades.q4 !== undefined ? subjectGrades.q4.toFixed(0) : '--'}
+                                    </td>
+                                    <td className={`border p-2 font-bold ${borderClass} ${printConfig.final ? 'text-black' : 'text-slate-300 print:invisible'}`}>
+                                        {subjectGrades.final !== undefined ? subjectGrades.final.toFixed(0) : '--'}
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

@@ -20,7 +20,55 @@
 import type { TourStep } from '../components/ui/ProductTour';
 
 // ============================================================================
-// 📚 GRADEBOOK TOUR
+// � DASHBOARD TOUR
+// ============================================================================
+export const dashboardTour: TourStep[] = [
+    {
+        target: '[data-tour="page-title"]',
+        title: 'Welcome to Your Dashboard! 🎯',
+        content: 'This is your command center! Get a quick overview of your classes, student performance, and recent activity all in one place.',
+        placement: 'bottom',
+    },
+    {
+        target: '[data-tour="stats-grid"]',
+        title: 'Key Statistics at a Glance',
+        content: 'These cards show important metrics: total students, subjects you teach, grading progress, and overall class performance.',
+        placement: 'bottom',
+    },
+    {
+        target: '[data-tour="pending-grades"]',
+        title: 'Pending Grades Alert ⚠️',
+        content: 'Never miss a grade! This widget shows ungraded assessments for the current quarter. Click "Grade Now" to jump straight to the gradebook with filters applied.',
+        placement: 'bottom',
+    },
+    {
+        target: '[data-tour="grade-distribution"]',
+        title: 'Grade Distribution Chart 📊',
+        content: 'See how your students are performing! This chart shows the distribution of grades across all your assessments.',
+        placement: 'bottom',
+    },
+    {
+        target: '[data-tour="quick-actions"]',
+        title: 'Quick Actions',
+        content: 'Jump directly to common tasks like entering grades, creating assessments, or viewing your student roster.',
+        placement: 'left',
+    },
+    {
+        target: '[data-tour="subject-performance"]',
+        title: 'Subject Performance Tracker',
+        content: 'Monitor which subjects are doing well and which might need extra attention. Averages are calculated automatically!',
+        placement: 'top',
+    },
+    {
+        target: '[data-tour="recent-assessments"]',
+        title: 'Recent Activity',
+        content: 'Keep track of your most recent assessments and quizzes. Click on any to view details or enter grades.',
+        placement: 'top',
+    },
+];
+
+// ============================================================================
+// �📚 GRADEBOOK TOUR
 // ============================================================================
 export const gradebookTour: TourStep[] = [
     {
@@ -200,6 +248,13 @@ export interface TourConfig {
 }
 
 export const tourConfigs: Record<string, TourConfig> = {
+    dashboard: {
+        id: 'dashboard',
+        storageKey: 'dashboard-tour-completed',
+        steps: dashboardTour,
+        autoStart: true,
+        delay: 1000,
+    },
     gradebook: {
         id: 'gradebook',
         storageKey: 'gradebook-tour-completed',

@@ -150,7 +150,7 @@ export class GradingDatabase extends Dexie {
 
                     assessments.push({
                         id: assessId,
-                        termId: 't-q1',
+                        termId: 't-q4',
                         subjectId: sub.id,
                         title: cat === 'WW' ? 'Unit Quiz' : cat === 'PT' ? 'Major Project' : 'Quarterly Exam',
                         category: cat,

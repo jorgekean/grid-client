@@ -29,7 +29,7 @@ const navGroups = [
         title: 'Core',
         links: [
             { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-            { name: 'My Profile', path: '/profile', icon: UserCircle },
+            // { name: 'My Profile', path: '/profile', icon: UserCircle },
         ]
     },
     {

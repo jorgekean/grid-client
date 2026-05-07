@@ -1,9 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Printer, X, Settings2 } from 'lucide-react';
-import { useStudentPerformance } from '../../hooks/useStudentPerformance';
+import { db, type Subject } from '../../services/db';
+import { calculateStudentGrade } from '../../utils/gradeEngine';
+
+interface QuarterGrades {
+    [subjectId: string]: {
+        q1?: number;
+        q2?: number;
+        q3?: number;
+        q4?: number;
+        final?: number;
+    };
+}
 
 export function ReportCard({ student, onClose }: { student: any, onClose: () => void }) {
-    const { performances } = useStudentPerformance(student.id, 't-q1');
+    const [subjects, setSubjects] = useState<Subject[]>([]);
+    const [quarterGrades, setQuarterGrades] = useState<QuarterGrades>({});
+    const [isLoading, setIsLoading] = useState(true);
 
     // --- INCREMENTAL PRINT STATE ---
     // Toggles what actually gets sent to the printer's ink cartridge
@@ -15,6 +28,85 @@ export function ReportCard({ student, onClose }: { student: any, onClose: () => 
         q4: false,
         final: false,
     });
+
+    // Fetch all quarter grades
+    useEffect(() => {
+        const loadData = async () => {
+            if (!student?.id) return;
+
+            setIsLoading(true);
+            try {
+                // 1. Get all subjects for student's grade level
+                const subjectsData = await db.subjects
+                    .where({ gradeLevel: student.gradeLevel })
+                    .toArray();
+                setSubjects(subjectsData);
+
+                // 2. Get all terms
+                const terms = await db.terms.toArray();
+
+                // 3. Calculate grades for each subject across all quarters
+                const gradesMap: QuarterGrades = {};
+
+                for (const subject of subjectsData) {
+                    gradesMap[subject.id] = {};
+
+                    // For each quarter (Q1-Q4)
+                    for (const term of terms) {
+                        const quarterKey = term.name.includes('1st') ? 'q1' :
+                            term.name.includes('2nd') ? 'q2' :
+                                term.name.includes('3rd') ? 'q3' :
+                                    term.name.includes('4th') ? 'q4' : null;
+
+                        if (!quarterKey) continue;
+
+                        // Get assessments for this subject and term
+                        const assessments = await db.assessments
+                            .where({ subjectId: subject.id, termId: term.id })
+                            .toArray();
+
+                        if (assessments.length === 0) {
+                            gradesMap[subject.id][quarterKey] = undefined;
+                            continue;
+                        }
+
+                        // Get grades for this student and these assessments
+                        const assessmentIds = assessments.map(a => a.id);
+                        const grades = await db.grades
+                            .where('assessmentId')
+                            .anyOf(assessmentIds)
+                            .and(g => g.studentId === student.id)
+                            .toArray();
+
+                        // Calculate final grade using grade engine
+                        const result = calculateStudentGrade(student.id, assessments, grades, subject);
+                        gradesMap[subject.id][quarterKey] = result.finalGrade;
+                    }
+
+                    // Calculate final grade (average of all quarters with data)
+                    const quarterValues = [
+                        gradesMap[subject.id].q1,
+                        gradesMap[subject.id].q2,
+                        gradesMap[subject.id].q3,
+                        gradesMap[subject.id].q4
+                    ].filter(v => v !== undefined && v > 0) as number[];
+
+                    if (quarterValues.length > 0) {
+                        gradesMap[subject.id].final =
+                            quarterValues.reduce((sum, v) => sum + v, 0) / quarterValues.length;
+                    }
+                }
+
+                setQuarterGrades(gradesMap);
+            } catch (error) {
+                console.error('Error loading Report Card data:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadData();
+    }, [student]);
 
     const handlePrint = () => {
         window.print();
@@ -112,40 +204,57 @@ export function ReportCard({ student, onClose }: { student: any, onClose: () => 
                         </tr>
                     </thead>
                     <tbody>
-                        {performances.map(({ subject, finalGrade }) => (
-                            <tr key={subject.id}>
-                                {/* Subject Name (Depends on Layout toggle) */}
-                                <td className={`border p-2 text-left font-bold uppercase ${borderClass} ${printConfig.layout ? '' : 'print:text-transparent'}`}>
-                                    {subject.title}
-                                </td>
-
-                                {/* Q1 Grade */}
-                                <td className={`border p-2 font-mono ${borderClass} ${printConfig.q1 ? 'text-black' : 'text-slate-300 print:text-transparent'}`}>
-                                    {finalGrade.toFixed(0)}
-                                </td>
-
-                                {/* Q2 Grade (Placeholder for now) */}
-                                <td className={`border p-2 font-mono ${borderClass} ${printConfig.q2 ? 'text-black' : 'text-slate-300 print:text-transparent'}`}>
-                                    {printConfig.q2 ? (finalGrade + 2).toFixed(0) : '--'}
-                                </td>
-
-                                {/* Q3 Grade */}
-                                <td className={`border p-2 font-mono ${borderClass} ${printConfig.q3 ? 'text-black' : 'text-slate-300 print:text-transparent'}`}>--</td>
-
-                                {/* Q4 Grade */}
-                                <td className={`border p-2 font-mono ${borderClass} ${printConfig.q4 ? 'text-black' : 'text-slate-300 print:text-transparent'}`}>--</td>
-
-                                {/* Final Grade */}
-                                <td className={`border p-2 font-bold ${borderClass} ${printConfig.final ? 'text-black' : 'text-slate-300 print:text-transparent'}`}>
-                                    {printConfig.final ? finalGrade.toFixed(0) : '--'}
-                                </td>
-
-                                {/* Remarks */}
-                                <td className={`border p-2 font-bold uppercase tracking-tighter ${borderClass} ${printConfig.final ? 'text-black' : 'text-slate-300 print:text-transparent'}`}>
-                                    {printConfig.final ? (finalGrade >= 75 ? 'Passed' : 'Failed') : '--'}
+                        {isLoading ? (
+                            <tr>
+                                <td colSpan={7} className="border p-8 text-center text-slate-500">
+                                    Loading grades...
                                 </td>
                             </tr>
-                        ))}
+                        ) : (
+                            subjects.map((subject) => {
+                                const subjectGrades = quarterGrades[subject.id] || {};
+                                const finalGrade = subjectGrades.final;
+
+                                return (
+                                    <tr key={subject.id}>
+                                        {/* Subject Name (Depends on Layout toggle) */}
+                                        <td className={`border p-2 text-left font-bold uppercase ${borderClass} ${printConfig.layout ? '' : 'print:text-transparent'}`}>
+                                            {subject.title}
+                                        </td>
+
+                                        {/* Q1 Grade */}
+                                        <td className={`border p-2 font-mono ${borderClass} ${printConfig.q1 ? 'text-black' : 'text-slate-300 print:text-transparent'}`}>
+                                            {subjectGrades.q1 !== undefined ? subjectGrades.q1.toFixed(0) : '--'}
+                                        </td>
+
+                                        {/* Q2 Grade */}
+                                        <td className={`border p-2 font-mono ${borderClass} ${printConfig.q2 ? 'text-black' : 'text-slate-300 print:text-transparent'}`}>
+                                            {subjectGrades.q2 !== undefined ? subjectGrades.q2.toFixed(0) : '--'}
+                                        </td>
+
+                                        {/* Q3 Grade */}
+                                        <td className={`border p-2 font-mono ${borderClass} ${printConfig.q3 ? 'text-black' : 'text-slate-300 print:text-transparent'}`}>
+                                            {subjectGrades.q3 !== undefined ? subjectGrades.q3.toFixed(0) : '--'}
+                                        </td>
+
+                                        {/* Q4 Grade */}
+                                        <td className={`border p-2 font-mono ${borderClass} ${printConfig.q4 ? 'text-black' : 'text-slate-300 print:text-transparent'}`}>
+                                            {subjectGrades.q4 !== undefined ? subjectGrades.q4.toFixed(0) : '--'}
+                                        </td>
+
+                                        {/* Final Grade */}
+                                        <td className={`border p-2 font-bold ${borderClass} ${printConfig.final ? 'text-black' : 'text-slate-300 print:text-transparent'}`}>
+                                            {finalGrade !== undefined ? finalGrade.toFixed(0) : '--'}
+                                        </td>
+
+                                        {/* Remarks */}
+                                        <td className={`border p-2 font-bold uppercase tracking-tighter ${borderClass} ${printConfig.final ? 'text-black' : 'text-slate-300 print:text-transparent'}`}>
+                                            {finalGrade !== undefined && printConfig.final ? (finalGrade >= 75 ? 'Passed' : 'Failed') : '--'}
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
                     </tbody>
                 </table>
 

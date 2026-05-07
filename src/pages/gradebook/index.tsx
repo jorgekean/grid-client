@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { LayoutGrid, Info, CheckCircle2, Calculator, ArrowRight, HelpCircle } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { LayoutGrid, Info, CheckCircle2, Calculator, ArrowRight, HelpCircle, Filter, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useSubjects } from '../../hooks/useSubjects';
@@ -15,12 +16,14 @@ const GradeCell = ({
     studentId,
     assessment,
     initialScore,
-    onSave
+    onSave,
+    isUngraded
 }: {
     studentId: string,
     assessment: Assessment,
     initialScore?: number,
-    onSave: (val: number) => void
+    onSave: (val: number) => void,
+    isUngraded?: boolean
 }) => {
     const [value, setValue] = useState<string>(initialScore !== undefined ? String(initialScore) : '');
     const [isSaved, setIsSaved] = useState(false);
@@ -47,14 +50,18 @@ const GradeCell = ({
     };
 
     return (
-        <div className="relative w-full h-full flex items-center">
+        <div className={`relative w-full h-full flex items-center ${isUngraded ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''
+            }`}>
             <input
                 type="number"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 onBlur={handleBlur}
                 placeholder="-"
-                className="w-full h-full min-w-[70px] p-3 text-center bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40 focus:bg-primary-50 dark:focus:bg-primary-900/20 focus:ring-2 focus:ring-inset focus:ring-primary-500 text-slate-900 dark:text-slate-100 font-mono text-sm outline-none transition-colors"
+                className={`w-full h-full min-w-[70px] p-3 text-center bg-transparent ${isUngraded
+                        ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/30 focus:bg-yellow-100 dark:focus:bg-yellow-900/40 ring-1 ring-yellow-300 dark:ring-yellow-700'
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/40 focus:bg-primary-50 dark:focus:bg-primary-900/20'
+                    } focus:ring-2 focus:ring-inset focus:ring-primary-500 text-slate-900 dark:text-slate-100 font-mono text-sm outline-none transition-colors`}
             />
             {isSaved && <CheckCircle2 className="absolute right-1 w-3 h-3 text-emerald-500 animate-in fade-in zoom-in" />}
         </div>
@@ -66,10 +73,45 @@ export function Gradebook() {
     const { subjects } = useSubjects();
     const { terms } = useTerms();
     const { sections } = useSections();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const [selectedSubject, setSelectedSubject] = useState('');
     const [selectedSection, setSelectedSection] = useState('');
     const [selectedTerm, setSelectedTerm] = useState('');
+    const [showUngradedOnly, setShowUngradedOnly] = useState(false);
+
+    // Check URL params for filters and pre-selections
+    useEffect(() => {
+        const filterParam = searchParams.get('filter');
+        const subjectParam = searchParams.get('subject');
+        const sectionParam = searchParams.get('section');
+        const termParam = searchParams.get('term');
+
+        // Apply filter
+        if (filterParam === 'ungraded') {
+            setShowUngradedOnly(true);
+        }
+
+        // Pre-select from URL params
+        if (subjectParam && !selectedSubject) {
+            setSelectedSubject(subjectParam);
+        }
+        if (sectionParam && !selectedSection) {
+            setSelectedSection(sectionParam);
+        }
+        if (termParam && !selectedTerm) {
+            setSelectedTerm(termParam);
+        } else if (!selectedTerm && terms.length > 0 && filterParam === 'ungraded') {
+            // Auto-select current term if coming from dashboard
+            const now = new Date();
+            const currentTerm = terms.find(t =>
+                now >= new Date(t.startDate) && now <= new Date(t.endDate)
+            );
+            if (currentTerm) {
+                setSelectedTerm(currentTerm.id);
+            }
+        }
+    }, [searchParams, terms, selectedSubject, selectedSection, selectedTerm]);
 
     // 🎯 PRODUCT TOUR - Using the reusable hook
     const { startTour, TourComponent } = useProductTour('gradebook', () => {
@@ -86,6 +128,28 @@ export function Gradebook() {
         selectedSection,
         selectedTerm
     );
+
+    // 🔍 FILTER: Show only ungraded students (but keep ALL assessments visible)
+    const filteredStudents = useMemo(() => {
+        if (!showUngradedOnly) return students;
+
+        // Only show students who have at least one ungraded assessment
+        return students.filter(student => {
+            const studentGrades = grades.filter(g => g.studentId === student.id).length;
+            return studentGrades < assessments.length;
+        });
+    }, [showUngradedOnly, students, grades, assessments]);
+
+    // When filtering, we show ALL assessments (so teachers can see the full picture)
+    // We just filter which STUDENTS appear in the list
+    const filteredAssessments = assessments;
+
+    // Calculate ungraded count
+    const ungradedCount = useMemo(() => {
+        const expected = assessments.length * students.length;
+        const actual = grades.length;
+        return expected - actual;
+    }, [assessments, students, grades]);
 
     return (
         <div className="space-y-6 flex flex-col h-[calc(100vh-10rem)]">
@@ -145,6 +209,61 @@ export function Gradebook() {
                 </div>
             </header>
 
+            {/* 🔍 FILTER CONTROLS - Show when data is loaded */}
+            {selectedSubject && selectedSection && selectedTerm && (
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center gap-4">
+                        {/* Modern Toggle Switch */}
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                            <div className="relative">
+                                <input
+                                    type="checkbox"
+                                    checked={showUngradedOnly}
+                                    onChange={(e) => {
+                                        setShowUngradedOnly(e.target.checked);
+                                        // Remove URL param when unchecked
+                                        if (!e.target.checked) {
+                                            setSearchParams({});
+                                        }
+                                    }}
+                                    className="sr-only peer"
+                                />
+                                <div className="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary-600"></div>
+                            </div>
+                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                Show ungraded only
+                            </span>
+                        </label>
+
+                        {showUngradedOnly && ungradedCount > 0 && (
+                            <span className="px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-black">
+                                {ungradedCount} cells to grade
+                            </span>
+                        )}
+
+                        {showUngradedOnly && ungradedCount === 0 && (
+                            <span className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-black flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" />
+                                All graded!
+                            </span>
+                        )}
+                    </div>
+
+                    {showUngradedOnly && (
+                        <button
+                            onClick={() => {
+                                setShowUngradedOnly(false);
+                                setSearchParams({});
+                            }}
+                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+                        >
+                            <X className="w-3 h-3" />
+                            Clear filter
+                        </button>
+                    )}
+                </div>
+            )}
+
             {/* 2. Grid Logic */}
             {!selectedSubject || !selectedSection || !selectedTerm ? (
                 <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
@@ -162,7 +281,7 @@ export function Gradebook() {
                                 </th>
 
                                 {/* Scrollable: Assessments */}
-                                {assessments.map(a => (
+                                {filteredAssessments.map(a => (
                                     <th key={a.id} className="p-3 border-b border-r border-slate-200 dark:border-slate-800 w-[110px] text-center bg-white dark:bg-slate-950">
                                         <div className="flex flex-col items-center gap-1">
                                             <span className={`px-2 py-0.5 rounded-[4px] text-[9px] font-black ${a.category === 'WW' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' :
@@ -191,7 +310,7 @@ export function Gradebook() {
                         </thead>
 
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                            {students.map((student) => {
+                            {filteredStudents.map((student) => {
                                 const result = calculateStudentGrade(student.id, assessments, grades, selectedSubjectData!);
 
                                 return (
@@ -201,15 +320,22 @@ export function Gradebook() {
                                             <p className="text-[10px] font-mono text-slate-400">{student.studentNumber}</p>
                                         </td>
 
-                                        {assessments.map(a => (
-                                            <td key={a.id} className="p-0 border-r border-slate-100 dark:border-slate-800">
-                                                <GradeCell
-                                                    studentId={student.id} assessment={a}
-                                                    initialScore={grades.find(g => g.studentId === student.id && g.assessmentId === a.id)?.score}
-                                                    onSave={(val) => updateGrade(student.id, a.id, val)}
-                                                />
-                                            </td>
-                                        ))}
+                                        {filteredAssessments.map(a => {
+                                            const existingGrade = grades.find(g => g.studentId === student.id && g.assessmentId === a.id);
+                                            const isUngraded = !existingGrade;
+
+                                            return (
+                                                <td key={a.id} className="p-0 border-r border-slate-100 dark:border-slate-800">
+                                                    <GradeCell
+                                                        studentId={student.id}
+                                                        assessment={a}
+                                                        initialScore={existingGrade?.score}
+                                                        onSave={(val) => updateGrade(student.id, a.id, val)}
+                                                        isUngraded={isUngraded}
+                                                    />
+                                                </td>
+                                            );
+                                        })}
 
                                         <td className="sticky right-[180px] bg-slate-50/50 dark:bg-slate-800/30 p-3 text-center border-l border-slate-100 dark:border-slate-800 font-mono text-[11px] text-slate-500 z-30">
                                             {result.ww.weightedScore.toFixed(2)}
