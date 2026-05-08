@@ -69,64 +69,69 @@ body {
   }
 }
 
-
-
 @media print {
 
-  /* Prevent the body from creating extra height */
+  /* 1. Reset Body & Scrolling */
   html,
   body {
     height: auto !important;
-    overflow: hidden !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    background-color: white !important;
   }
 
-  /* 1. FORCE VECTOR TEXT (Anti-Blur) */
+  ::-webkit-scrollbar {
+    display: none !important;
+  }
+
   * {
-    filter: none !important;
-    backdrop-filter: none !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-    transform: none !important;
-    /* Transforms also trigger rasterization */
+    scrollbar-width: none !important;
   }
 
-  /* 2. Define Standard A4 Paper Size */
-  @page {
-    size: A4 portrait;
-    margin: 0.5in;
-    /* Standard DepEd margin */
-  }
-
-  /* 3. Hide ALL app UI */
+  /* 2. Hide everything by default */
   body * {
     visibility: hidden;
   }
 
-  /* 4. Show ONLY the report card */
-  .a4-print-container,
-  .a4-print-container * {
+  /* 3. Un-hide ANY container with the .print-root class */
+  .print-root,
+  .print-root * {
     visibility: visible;
   }
 
-  /* 5. Reset position for the printer */
-  .a4-print-container {
+  /* 4. Move the print root to the absolute top-left to bypass hidden elements */
+  .print-root {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
     margin: 0 !important;
     padding: 0 !important;
+  }
+
+  /* 5. Define Standard A4 Paper Size */
+  @page {
+    size: A4 portrait;
+    margin: 0.5in;
+  }
+
+  /* 6. Card Container */
+  .a4-print-container {
+    position: relative;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
-
-    /* CRITICAL: Forces the printer to print the gray table headers */
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Prevent awkward page breaks in the middle of tables */
+  /* 7. Prevent awkward breaks */
   table,
-  .signature-block {
+  .signature-block,
+  tr {
     page-break-inside: avoid;
+    break-inside: avoid;
   }
 }

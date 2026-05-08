@@ -16,6 +16,7 @@ import { Gradebook } from './pages/gradebook'
 import { StudentProfile } from './pages/studentprofile'
 import { PrintSF9 } from './pages/grading/PrintSF9'
 import { Dashboard } from './pages/dashboard'
+import { BulkPrintSF9 } from './pages/grading/BulkPrintSF9'
 
 function App() {
 
@@ -37,6 +38,7 @@ function App() {
               <Route path="students/:studentId" element={<StudentProfile />} />
               <Route path="assessments" element={<Assessments />} />
               <Route path="gradebook" element={<Gradebook />} />
+              <Route path="print/bulk-sf9" element={<BulkPrintSF9 />} />
 
               {/* <Route index element={<Dashboard />} />
               <Route path="assets" element={<AssetRegistry />} />

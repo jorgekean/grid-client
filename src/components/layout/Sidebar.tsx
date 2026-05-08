@@ -14,7 +14,8 @@ import {
     UserCircle,
     Package,
     Sparkles,
-    X
+    X,
+    Printer
 } from 'lucide-react';
 
 // 1. Explicitly define our props so TypeScript is happy
@@ -45,6 +46,7 @@ const navGroups = [
         links: [
             { name: 'Assessments', path: '/assessments', icon: ClipboardList },
             { name: 'Class Gradebook', path: '/gradebook', icon: Table2 },
+            { name: 'Bulk Print SF9', path: '/print/bulk-sf9', icon: Printer },
         ]
     },
     {
