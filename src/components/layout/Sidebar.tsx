@@ -24,37 +24,38 @@ interface SidebarProps {
     onClose: () => void;
 }
 
+const rootpath = '/grid-client';
 // 2. Our grouped navigation structure (Phase 1 Refined)
 const navGroups = [
     {
         title: 'Core',
         links: [
-            { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+            { name: 'Dashboard', path: `${rootpath}/`, icon: LayoutDashboard },
             // { name: 'My Profile', path: '/profile', icon: UserCircle },
         ]
     },
     {
         title: 'Academic Control', // Merged Setup & Roster for a tighter flow
         links: [
-            { name: 'Academic Terms', path: '/terms', icon: CalendarDays },
-            { name: 'Subject Registry', path: '/subjects', icon: BookOpen },
-            { name: 'Student Roster', path: '/students', icon: GraduationCap },
+            { name: 'Academic Terms', path: `${rootpath}/terms`, icon: CalendarDays },
+            { name: 'Subject Registry', path: `${rootpath}/subjects`, icon: BookOpen },
+            { name: 'Student Roster', path: `${rootpath}/students`, icon: GraduationCap },
         ]
     },
     {
         title: 'Grading Engine', // The "Workhorse" of the app
         links: [
-            { name: 'Assessments', path: '/assessments', icon: ClipboardList },
-            { name: 'Class Gradebook', path: '/gradebook', icon: Table2 },
-            { name: 'Print Cards', path: '/print/bulk-sf9', icon: Printer },
+            { name: 'Assessments', path: `${rootpath}/assessments`, icon: ClipboardList },
+            { name: 'Class Gradebook', path: `${rootpath}/gradebook`, icon: Table2 },
+            { name: 'Print Cards', path: `${rootpath}/print/bulk-sf9`, icon: Printer },
         ]
     },
     {
         title: 'Monitoring',
         links: [
-            { name: 'Performance', path: '/performance', icon: BarChart3 },
-            { name: 'Audit Logs', path: '/audit', icon: ShieldCheck },
-            { name: 'Settings', path: '/settings', icon: Settings },
+            { name: 'Performance', path: `${rootpath}/performance`, icon: BarChart3 },
+            { name: 'Audit Logs', path: `${rootpath}/audit`, icon: ShieldCheck },
+            { name: 'Settings', path: `${rootpath}/settings`, icon: Settings },
         ]
     }
 ];

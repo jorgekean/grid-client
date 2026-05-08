@@ -30,7 +30,7 @@ function App() {
           <Routes>
             {/* <Route path="/login" element={<Login />} /> */}
             {/* <Route path="/print/sf9/:studentId" element={<PrintSF9 />} /> */}
-            <Route path="/" element={<AppLayout />}>
+            <Route path="/grid-client" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="terms" element={<AcademicTerms />} />
               <Route path="subjects" element={<Subjects />} />
