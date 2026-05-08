@@ -46,7 +46,7 @@ const navGroups = [
         links: [
             { name: 'Assessments', path: '/assessments', icon: ClipboardList },
             { name: 'Class Gradebook', path: '/gradebook', icon: Table2 },
-            { name: 'Bulk Print SF9', path: '/print/bulk-sf9', icon: Printer },
+            { name: 'Print Cards', path: '/print/bulk-sf9', icon: Printer },
         ]
     },
     {
