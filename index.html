@@ -5,13 +5,42 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/grid-client/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GRID System</title>
-  <script type="module" crossorigin src="/grid-client/assets/index-Ddeb11vW.js"></script>
-  <link rel="stylesheet" crossorigin href="/grid-client/assets/index-ClFzWgJm.css">
+  <title>GRID | Grading, Reporting & Insights Dashboard</title>
+  <meta name="description"
+    content="The automated SF9, SF10 and E-Class Record dashboard built specifically for DepEd school teachers." />
+  <meta name="author" content="Jorge Kean / Nabix" />
+
+  <!-- 2. PWA & MOBILE NATIVE FEEL -->
+  <!-- Changes the browser address bar color to match your app's primary color (e.g., Tailwind blue-600) -->
+  <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+
+  <!-- Tells iOS devices to treat this as a standalone native app if saved to the homescreen -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="GRID" />
+
+  <!-- 3. SOCIAL MEDIA PREVIEWS (Open Graph) -->
+  <!-- When a teacher pastes your link in Messenger or Viber, this builds the preview card -->
+  <meta property="og:title" content="Grading, Reporting & Insights Dashboard" />
+  <meta property="og:description" content="Automate your DepEd Transmutations, SF9s, and E-Class Records instantly." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://jorgekean.github.io/grid-client/" />
+  <meta property="og:image" content="https://jorgekean.github.io/grid-client/social-preview.png" />
+  <!-- Create a nice 1200x630px promo image -->
+  <meta property="og:site_name" content="GRID" />
+
+  <!-- 4. CACHE CONTROL FOR OFFLINE-FIRST -->
+  <!-- Ensures the browser always checks for your latest React build, preventing teachers from getting stuck on an old version -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script type="module" crossorigin src="/grid-client/assets/index-mOOHs9oa.js"></script>
+  <link rel="stylesheet" crossorigin href="/grid-client/assets/index-Xflr0Dv9.css">
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root"></div>
 </body>
 
 </html>
