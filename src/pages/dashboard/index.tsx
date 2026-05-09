@@ -338,92 +338,95 @@ export function Dashboard() {
 
             {/* 🎯 PENDING GRADES WIDGET - Conditionally shown */}
             {pendingGrades.totalUngraded > 0 && (
-                <div data-tour="pending-grades" className={`rounded-2xl p-6 border-2 shadow-lg ${pendingGrades.urgency === 'high'
+                <div data-tour="pending-grades" className={`rounded-2xl p-4 sm:p-6 border-2 shadow-lg overflow-hidden ${pendingGrades.urgency === 'high'
                     ? 'bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-300 dark:border-red-800'
                     : pendingGrades.urgency === 'medium'
                         ? 'bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-300 dark:border-yellow-800'
                         : 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-300 dark:border-blue-800'
                     }`}>
-                    <div className="flex items-start gap-4">
-                        <div className={`p-3 rounded-xl shrink-0 ${pendingGrades.urgency === 'high'
+                    <div className="flex items-start gap-3 sm:gap-4">
+                        <div className={`p-2 sm:p-3 rounded-xl shrink-0 ${pendingGrades.urgency === 'high'
                             ? 'bg-red-500'
                             : pendingGrades.urgency === 'medium'
                                 ? 'bg-yellow-500'
                                 : 'bg-blue-500'
                             }`}>
                             {pendingGrades.urgency === 'high' ? (
-                                <AlertTriangle className="w-6 h-6 text-white" />
+                                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                             ) : (
-                                <AlertCircle className="w-6 h-6 text-white" />
+                                <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                             )}
                         </div>
 
-                        <div className="flex-1">
-                            <div className="flex items-center justify-between mb-4">
-                                <div>
-                                    <h3 className={`text-lg font-bold mb-1 ${pendingGrades.urgency === 'high'
-                                        ? 'text-red-900 dark:text-red-100'
-                                        : pendingGrades.urgency === 'medium'
-                                            ? 'text-yellow-900 dark:text-yellow-100'
-                                            : 'text-blue-900 dark:text-blue-100'
-                                        }`}>
-                                        ⚠️ Pending Grades ({pendingGrades.currentTermName})
-                                    </h3>
-                                    <p className={`text-2xl font-black ${pendingGrades.urgency === 'high'
-                                        ? 'text-red-600 dark:text-red-400'
-                                        : pendingGrades.urgency === 'medium'
-                                            ? 'text-yellow-600 dark:text-yellow-400'
-                                            : 'text-blue-600 dark:text-blue-400'
-                                        }`}>
-                                        {pendingGrades.totalUngraded} grades needed across {pendingGrades.bySubjectSection.length} {pendingGrades.bySubjectSection.length === 1 ? 'class' : 'classes'}
-                                    </p>
-                                </div>
+                        {/* ADDED min-w-0 HERE to prevent container blowout */}
+                        <div className="flex-1 min-w-0">
+                            <div className="mb-4">
+                                <h3 className={`text-base sm:text-lg font-bold mb-1 break-words ${pendingGrades.urgency === 'high'
+                                    ? 'text-red-900 dark:text-red-100'
+                                    : pendingGrades.urgency === 'medium'
+                                        ? 'text-yellow-900 dark:text-yellow-100'
+                                        : 'text-blue-900 dark:text-blue-100'
+                                    }`}>
+                                    ⚠️ Pending Grades ({pendingGrades.currentTermName})
+                                </h3>
+                                <p className={`text-xl sm:text-2xl font-black break-words ${pendingGrades.urgency === 'high'
+                                    ? 'text-red-600 dark:text-red-400'
+                                    : pendingGrades.urgency === 'medium'
+                                        ? 'text-yellow-600 dark:text-yellow-400'
+                                        : 'text-blue-600 dark:text-blue-400'
+                                    }`}>
+                                    {pendingGrades.totalUngraded} grades needed across {pendingGrades.bySubjectSection.length} {pendingGrades.bySubjectSection.length === 1 ? 'class' : 'classes'}
+                                </p>
                             </div>
 
                             {/* 📚 Breakdown by Subject-Section */}
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 <p className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
                                     Click to grade each class:
                                 </p>
                                 {pendingGrades.bySubjectSection.slice(0, 5).map((item) => (
                                     <div
                                         key={`${item.subjectId}-${item.sectionName}`}
-                                        className={`flex items-center justify-between p-3 rounded-lg border transition-all ${item.hasOverdue
+                                        /* CHANGED to flex-col on mobile, flex-row on larger screens */
+                                        className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 gap-3 rounded-lg border transition-all ${item.hasOverdue
                                             ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                                             : 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'
                                             }`}
                                     >
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
+                                        {/* ADDED min-w-0 HERE */}
+                                        <div className="flex-1 min-w-0">
+                                            {/* ADDED flex-wrap HERE so long titles and badges wrap gracefully */}
+                                            <div className="flex flex-wrap items-center gap-2 mb-1">
                                                 <p className={`font-bold text-sm ${item.hasOverdue
                                                     ? 'text-red-900 dark:text-red-100'
                                                     : 'text-slate-900 dark:text-slate-100'
                                                     }`}>
                                                     📚 {item.subjectName}
                                                 </p>
-                                                <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300">
+                                                <span className="shrink-0 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300">
                                                     {item.sectionName}
                                                 </span>
                                                 {item.hasOverdue && (
-                                                    <span className="text-xs font-black text-red-600 dark:text-red-400">
+                                                    <span className="shrink-0 text-xs font-black text-red-600 dark:text-red-400">
                                                         ({item.mostOverdueDays} days overdue)
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-slate-600 dark:text-slate-400">
+                                            <p className="text-xs text-slate-600 dark:text-slate-400 truncate">
                                                 {item.ungradedCount} grades across {item.assessmentCount} {item.assessmentCount === 1 ? 'assessment' : 'assessments'}
                                             </p>
                                         </div>
 
                                         <Link
                                             to={`/grid-client/gradebook?subject=${item.subjectId}&section=${item.sectionName}&term=${pendingGrades.currentTermId}&filter=ungraded`}
-                                            className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 shadow-md transition-all hover:scale-105 active:scale-95 ${item.hasOverdue
+                                            /* MADE button full width on mobile, auto on sm+ */
+                                            className={`w-full sm:w-auto shrink-0 justify-center px-4 py-2.5 rounded-lg font-bold text-xs flex items-center gap-2 shadow-md transition-all hover:scale-105 active:scale-95 ${item.hasOverdue
                                                 ? 'bg-red-500 hover:bg-red-600 text-white'
                                                 : 'bg-primary-500 hover:bg-primary-600 text-white'
                                                 }`}
                                         >
                                             Grade Now
-                                            <ClipboardCheck className="w-3 h-3" />
+                                            <ClipboardCheck className="w-4 h-4" />
                                         </Link>
                                     </div>
                                 ))}
@@ -567,95 +570,7 @@ export function Dashboard() {
             </div>
 
             {/* Bottom Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-                {/* Subject Performance */}
-                <div data-tour="subject-performance" className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                        <Award className="w-5 h-5 text-primary-600" />
-                        Subject Performance
-                    </h2>
-
-                    {subjectPerformance.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-8 text-center">
-                            <BookOpen className="w-10 h-10 text-slate-300 mb-2" />
-                            <p className="text-slate-500 dark:text-slate-400">No subjects yet</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {subjectPerformance.map((subject) => (
-                                <div key={subject.name} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="font-bold text-slate-900 dark:text-white">
-                                            {subject.name}
-                                        </span>
-                                        <span className={`text-lg font-black ${subject.average >= 85 ? 'text-green-600' :
-                                            subject.average >= 75 ? 'text-yellow-600' :
-                                                'text-red-600'
-                                            }`}>
-                                            {subject.average > 0 ? subject.average.toFixed(1) : '-'}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-                                        <span>{subject.assessmentCount} assessments</span>
-                                        <span>•</span>
-                                        <span>{subject.gradeCount} grades recorded</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Recent Assessments */}
-                <div data-tour="recent-assessments" className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                        <Clock className="w-5 h-5 text-primary-600" />
-                        Recent Assessments
-                    </h2>
-
-                    {upcomingAssessments.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-8 text-center">
-                            <Calendar className="w-10 h-10 text-slate-300 mb-2" />
-                            <p className="text-slate-500 dark:text-slate-400">No assessments yet</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {upcomingAssessments.map((assessment) => {
-                                const subject = subjects.find(s => s.id === assessment.subjectId);
-                                const categoryColors = {
-                                    WW: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-                                    PT: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
-                                    QA: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
-                                };
-
-                                return (
-                                    <div key={assessment.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
-                                        <div className="flex items-start justify-between mb-2">
-                                            <div className="flex-1">
-                                                <p className="font-bold text-slate-900 dark:text-white mb-1">
-                                                    {assessment.title}
-                                                </p>
-                                                <p className="text-sm text-slate-600 dark:text-slate-300">
-                                                    {subject?.title || 'Unknown Subject'}
-                                                </p>
-                                            </div>
-                                            <span className={`px-2 py-1 rounded-lg text-xs font-bold ${categoryColors[assessment.category]}`}>
-                                                {assessment.category}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                                            <span>{new Date(assessment.date).toLocaleDateString()}</span>
-                                            <span>•</span>
-                                            <span>{assessment.maxScore} points</span>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
-            </div>
 
             {/* Help Tip */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl p-6">

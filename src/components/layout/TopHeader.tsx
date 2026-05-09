@@ -39,7 +39,7 @@ export function TopHeader({ onOpenSidebar }: TopHeaderProps) {
                     </div>
                     <input
                         type="text"
-                        placeholder="Search property number..."
+                        placeholder="Search student number..."
                         className="block w-full pl-10 pr-3 py-2 bg-gray-50/50 dark:bg-gray-900/50 border-none rounded-xl text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:bg-[var(--bg-surface)] transition-all"
                     />
                 </div>
