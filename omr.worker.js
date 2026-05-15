@@ -1,16 +1,11 @@
-// omr.worker.ts
-/// <reference lib="webworker" />
-
+// public/omr.worker.js
 /* eslint-disable no-restricted-globals */
 
-// Explicitly tell TypeScript that 'self' is a Web Worker global scope, not the Window
-declare const self: DedicatedWorkerGlobalScope;
-
-// Now TypeScript knows this is perfectly legal
+// Import OpenCV.js (Ensure this path is correct based on your deployment)
 self.importScripts('./opencv.js');
 
 // Helper function to order the 4 corners for the perspective warp
-function orderPoints(pts: any, cv: any) {
+function orderPoints(pts, cv) {
     const rect = new cv.Mat(4, 1, cv.CV_32FC2);
     let sums = [], diffs = [];
 
@@ -35,7 +30,7 @@ function orderPoints(pts: any, cv: any) {
 
 self.onmessage = function (e) {
     const { imageData, action } = e.data;
-    const cv = (self as any).cv;
+    const cv = self.cv;
 
     if (action === 'PING') {
         self.postMessage({ status: 'READY' });
@@ -121,7 +116,7 @@ self.onmessage = function (e) {
         const startX = 100; const startY = 200;
         const rowHeight = 40; const bubbleWidth = 30; const bubbleSpacing = 40;
 
-        let studentAnswers: Record<string, string> = {};
+        let studentAnswers = {};
 
         for (let q = 0; q < numQuestions; q++) {
             let bestChoice = -1;
@@ -148,7 +143,7 @@ self.onmessage = function (e) {
         // Send results back to React Main Thread
         self.postMessage({ success: true, answers: studentAnswers, maxArea });
 
-    } catch (err: any) {
+    } catch (err) {
         self.postMessage({ error: err.message || "An error occurred during processing." });
     } finally {
         // 6. GUARANTEED MEMORY CLEANUP
