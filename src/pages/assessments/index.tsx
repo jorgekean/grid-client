@@ -11,6 +11,10 @@ import { useConfirm } from '../../contexts/ConfirmContext';
 import { Drawer } from '../../components/ui/Drawer';
 import { DataTable } from '../../components/ui/DataTable';
 import type { Assessment, AssessmentCategory } from '../../services/db';
+import { PrintBubbleSheet } from './PrintBubbleSheet';
+import { OMRScanner } from '../../components/omr/OMRScanner';
+import { BubbleSheetDocument } from '../../components/omr/BubbleSheetDocument';
+import { OMRTemplateGenerator } from '../../components/omr/OMRTemplate';
 
 export function Assessments() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -134,6 +138,9 @@ export function Assessments() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
+            {/* <PrintBubbleSheet /> */}
+            <OMRTemplateGenerator />
+            <OMRScanner />
             <header className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold">Assessment Registry</h1>
