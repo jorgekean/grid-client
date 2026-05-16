@@ -47,6 +47,9 @@ export interface Assessment {
     maxScore: number;
     date: Date;
     weightOverride?: number; // Optional: in case one specific PT is worth more
+
+    isOMR?: boolean;
+    answerKey?: Record<string, string>; // e.g., { "1": "A", "2": "D", "3": "B" }
 }
 
 export interface Grade {
@@ -80,7 +83,7 @@ export class GradingDatabase extends Dexie {
         super('GradingSystemDB');
 
         // Schema versioning
-        this.version(7).stores({
+        this.version(8).stores({
             terms: 'id, year, isLocked',
             subjects: 'id, code, gradeLevel',
             students: 'id, studentNumber, section, [gradeLevel+section]',
