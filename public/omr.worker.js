@@ -109,12 +109,13 @@ self.onmessage = function (e) {
         cv.warpPerspective(gray, warpedGray, transformMatrix, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
         cv.adaptiveThreshold(warpedGray, warpedThresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 51, 10);
 
-        // 5. EVALUATE BUBBLES
+        // Inside public/omr.worker.js
+
+        // 5. EVALUATE BUBBLES (Confidence Score Upgrade)
         const numQuestions = 20;
         const numChoices = 4;
         const choicesMap = ['A', 'B', 'C', 'D'];
 
-        // Synchronized Grid Constants
         const startX = 120;
         const startY = 180;
         const rowHeight = 35;
@@ -123,11 +124,14 @@ self.onmessage = function (e) {
 
         let studentAnswers = {};
 
+        // NEW: Confidence Thresholds
+        const BLANK_THRESHOLD = 80; // Minimum pixels to be considered shaded
+        const CONFIDENCE_MARGIN = 40; // The required pixel gap between 1st and 2nd place
+
         for (let q = 0; q < numQuestions; q++) {
-            let pixelCounts = [];
+            let bubbleStats = [];
 
             for (let c = 0; c < numChoices; c++) {
-                // Shrink the checking area slightly to ignore the printed bubble edges
                 let roiMargin = 6;
                 let x = startX + (c * bubbleSpacing) + roiMargin;
                 let y = startY + (q * rowHeight) + roiMargin;
@@ -135,19 +139,31 @@ self.onmessage = function (e) {
 
                 let bubbleROI = warpedThresh.roi(rect);
                 let filledPixels = cv.countNonZero(bubbleROI);
-                pixelCounts.push(filledPixels);
 
+                // Store both the pixel count AND the letter it belongs to
+                bubbleStats.push({ letter: choicesMap[c], pixels: filledPixels });
                 bubbleROI.delete();
             }
 
-            let maxPixels = Math.max(...pixelCounts);
-            let bestChoiceIndex = pixelCounts.indexOf(maxPixels);
+            // Sort the 4 bubbles from Darkest (most pixels) to Lightest
+            bubbleStats.sort((a, b) => b.pixels - a.pixels);
 
-            // Relative scoring: if the darkest bubble has enough shading, count it
-            if (maxPixels > 80) {
-                studentAnswers[(q + 1).toString()] = choicesMap[bestChoiceIndex];
-            } else {
+            let firstChoice = bubbleStats[0];
+            let secondChoice = bubbleStats[1];
+
+            if (firstChoice.pixels < BLANK_THRESHOLD) {
+                // If even the darkest bubble is super light, it's blank
                 studentAnswers[(q + 1).toString()] = "BLANK";
+            }
+            else if ((firstChoice.pixels - secondChoice.pixels) < CONFIDENCE_MARGIN) {
+                // AMBIGUITY DETECTED! 
+                // Example: The student shaded A (120 pixels) but poorly erased B (100 pixels).
+                // 120 - 100 = 20. This is less than our 40 margin. Flag it!
+                studentAnswers[(q + 1).toString()] = "REVIEW";
+            }
+            else {
+                // Clean, confident answer
+                studentAnswers[(q + 1).toString()] = firstChoice.letter;
             }
         }
 
